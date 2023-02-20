@@ -279,6 +279,7 @@ class layer:
 
     
     def train(self):
+        
         for idx in self.neurons:
             idx.train()
 
