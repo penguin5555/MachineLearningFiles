@@ -18,25 +18,67 @@
 # 5 is for dance
 # 6 is for classical
 
-import json
+# imports                         $ &
+import pandas as pd
 import re
 import random as r
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-
+import time as t
+global answerIdx
+answerIdx = 100
 
 # clear the terminal screen for ease on eyes
 os.system("cls")
 os.system("cls")
 
-# opening json file
-with open("trainingdata.json") as f:
-    importedData = json.load(f)
-    savedImportedData = dict(importedData)
+# initialize data
+data = pd.read_csv("five.csv")
+trainData = []
+testData = []
 
-with open("testingdata.json") as f:
-    importedTestingData = json.load(f)
+# make csv into an array
+temp = []
+for rowNumber in range(len(data)):
+    row = []
+    for item in range(len(data.columns)):
+        row.append(data.iloc[rowNumber, item])
+    temp.append(row)
+data = list(temp)
+
+# shuffle data and put it into train and test data
+for i in range(20):
+    r.shuffle(data)
+for i in range(len(data)):
+    if r.randint(0, 1) == 0:
+        testData.append(data[i])
+    else:
+        trainData.append(data[i])
+# make the answers into numbers
+idx = 0
+for i in trainData:
+    idx2 = 0
+    for ii in i:
+        if ii == 'Five':
+            trainData[idx][idx2] = 1
+        elif ii == 'NotFive':
+            trainData[idx][idx2] = 0
+        idx2 += 1
+    idx += 1
+idx = 0
+for i in testData:
+    idx2 = 0
+    for ii in i:
+        if ii == 'Five':
+            testData[idx][idx2] = 1
+        elif ii == 'NotFive':
+            testData[idx][idx2] = 0
+        idx2 += 1
+    idx += 1
+savedTrainData = list(trainData)
+savedTestData = list(testData)
+
 
 # start of data config
 
@@ -65,16 +107,6 @@ def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=
 
 # convert the dictionary from the json file to a dictionary with inputs to the network
 
-
-def jsonToDictionary(json):
-    key = ""
-    for i in range(0, 100):
-        key = f"{key}{i:02d}"
-    converted = []
-    for i in range(2, (len(json)*2)+2):
-        if i/2 == round(i/2):
-            converted.append(json[str(key[i] + key[i+1])])
-    return converted
 
 def sigmoid(val):
     # ReLu
@@ -106,24 +138,16 @@ def sigmoidInput(list):
 # separate the answers from the dataset
 
 
-def seperateAnswers(list, testingData=False):
-    if not testingData:
-        global answers
-        global inputNeurons
-        answers = []
-        for sublist in list:
-            for i in range(len(sublist)):
-                if i == 0:
-                    answers.append(sublist.pop(2))
-    else:
-        global testingAnswers
-        global inputNeurons
-        testingAnswers = []
-        for sublist in list:
-            for i in range(len(sublist)):
-                if i == 0:
-                    testingAnswers.append(sublist.pop(2))
-    
+def separateAnswers(list):
+    global answerIdx
+    global inputNeurons
+    answers = []
+    for sublist in list:
+        for i in range(len(sublist)):
+            if i == answerIdx:
+                answers.append(sublist.pop(answerIdx))
+    return answers
+
 
 # add the values from the dataset to the input layer
 
@@ -138,21 +162,15 @@ def setupInputNeurons(items):
         inputNeurons.append(item)
     inputNeurons[0] = inputNeurons[0] * 10
 
-# training data
-# importedData = savedImportedData
-# importedData = jsonToDictionary(importedData)
-# seperateAnswers(importedData)
-# trainingData = importedData
-# trainingData = sigmoidInput(trainingData)
-# trainingDataSelection = rand.randrange(0, len(trainingData))
+# setup data                    $ &
 
 
 # testing data
-importedTestingData = jsonToDictionary(importedTestingData)
-testingData = importedTestingData
-seperateAnswers(testingData)
-testingData = sigmoidInput(testingData)
-testingDataSelection = r.randrange(0, len(testingData))
+testData = savedTestData
+testAnswers = separateAnswers(testData)
+testData = sigmoidInput(testData)
+testDataSelection = r.randrange(0, len(testData))
+
 
 # setup the input neurons with a random selection of the imported data
 
@@ -166,12 +184,12 @@ testingDataSelection = r.randrange(0, len(testingData))
 
 
 class neuron:
-    def __init__(self, id, activationsOfPreviousLayer, fedInWeights, fedInBais):
+    def __init__(self, id, activationsOfPreviousLayer, fedInWeights, fedInBias):
         self.activationsOfPreviousLayer = activationsOfPreviousLayer
         self.fedInWeights = fedInWeights
         self.id = id
         self.innerWeights = fedInWeights
-        self.bias = fedInBais
+        self.bias = fedInBias
 
         self.weightedSum = 0
         idx = 0
@@ -294,26 +312,27 @@ class layer:
             percentage = idx.getActivation()*100
             activations.append(percentage)
         # does same thing as function above, just formats it cool
-        return f"Prediction: With {max(activations)}% certainty it is {activations.index(max(activations))+1}"
+        return f"Prediction: With {max(activations)}% certainty it is {activations.index(max(activations))}"
 
     def getCost(self, rightAnswer=False):
         global correctAnswer
-        # only use for ouput layer
-        actualOuput = []
-        predictedOuput = []
-        predictedOuput = self.getAllActivations()
+        # only use for output layer
+        actualOutput = []
+        predictedOutput = []
+        predictedOutput = self.getAllActivations()
 
-        for i in range(1, len(predictedOuput)+1):
-            if rightAnswer: 
-                if float(i) == float(correctAnswer):
-                    actualOuput.append(1.0)
+        for i in range(1, len(predictedOutput)+1):
+            if rightAnswer:
+                if float(i-1) == float(correctAnswer):
+                    actualOutput.append(1.0)
                 else:
-                    actualOuput.append(0.0)
+                    actualOutput.append(0.0)
             else:
-                if float(i) == float(rightAnswer):
-                    actualOuput.append(1.0)
+                if float(i-1) == float(rightAnswer):
+                    actualOutput.append(1.0)
                 else:
-                    actualOuput.append(0.0)
+                    actualOutput.append(0.0)
+        # print(predictedOutput, actualOutput, correctAnswer)
 
         def meanSquaredError(p, y):
             # use this only (best cost for this usage)
@@ -324,7 +343,7 @@ class layer:
 
         # multiplying by 0.5 (dividing by 2) so that when doing the
         # derivative, it will cancel it out
-        return 0.5*meanSquaredError(predictedOuput, actualOuput)
+        return 0.5*meanSquaredError(predictedOutput, actualOutput)
 
     def feedForwardAgain(self, amountOfNeurons, activationsOfPreviousLayer, weights, bias):
         self.activationsOfPreviousLayer = activationsOfPreviousLayer
@@ -357,13 +376,17 @@ def backpropogate(epochs, learnRate, inputNeurons, hiddenLayer1, hiddenLayer2, o
     global correctAnswer
     global answers
     global trainingData
-    global testingData
+    global testData
+    global testAnswers
+    printProgressBar(0, 1)
 
     def avgCost(hiddenLayer1_, hiddenLayer2_, outputLayer_):
         global correctAnswer
+        global answers
+        global trainData
         totCost = 0
-        for i in range(0, len(trainingData)-1):
-            inputNeurons_ = trainingData[i]
+        for i in range(0, len(trainData)):
+            inputNeurons_ = trainData[i]
             correctAnswer = answers[i]
             hiddenLayer1_.feedForwardAgain(
                 numberOfNeuronsHL1, inputNeurons_, hiddenLayer1_.getAllWeights(), hiddenLayer1_.getAllBiases())
@@ -376,7 +399,7 @@ def backpropogate(epochs, learnRate, inputNeurons, hiddenLayer1, hiddenLayer2, o
             outputLayer_.feedForwardAgain(
                 numberOfNeuronsOL, hiddenLayer2Activations_, outputLayer_.getAllWeights(), outputLayer_.getAllBiases())
             totCost += float(outputLayer_.getCost(correctAnswer))
-        return totCost/len(trainingData)
+        return totCost/len(trainData)
 
     def feedForwardGetCost(hiddenLayer1_, hiddenLayer2_, outputLayer_, testing=False):
         hiddenLayer1_.feedForwardAgain(
@@ -516,7 +539,7 @@ def backpropogate(epochs, learnRate, inputNeurons, hiddenLayer1, hiddenLayer2, o
 
         #########################################################
 
-        # train ouput layer weights
+        # train output layer weights
 
         neuronCount = 0
         weightCount = 0
@@ -740,14 +763,18 @@ def backpropogate(epochs, learnRate, inputNeurons, hiddenLayer1, hiddenLayer2, o
                     neuronCount, changeBias)
             neuronCount += 1
         afterCost = avgCost(hiddenLayer1, hiddenLayer2, outputLayer)
-        plotYAxis.append(baselineCost)
+        # only plot baselineCost if you want to see the change in cost
+        # plotYAxis.append(baselineCost)
         plotYAxis.append(afterCost)
+        accuracy = f"{(1-afterCost)*100}%"
+        printProgressBar(epochCount, epochs, printEnd=accuracy)
+
     print(f"Correct Answer: {correctAnswer}")
     print(f"{outputLayer.printPrediction()}")
     print(f"Cost: {outputLayer.getCost()}")
 
     ##
-
+    printProgressBar(1, 1)
     w = open("weights.txt", "r+")
     w.truncate(0)
 
@@ -777,34 +804,48 @@ def backpropogate(epochs, learnRate, inputNeurons, hiddenLayer1, hiddenLayer2, o
     b.write(str(biasesOL))
     b.close()
 
-
     os.system("cls")
-    os.system("cls")
-    os.system("cls")
-
-    for i in range(0, len(testingData)):
+    print("Train Data below")
+    for i in range(0, len(trainData)):
         pick = i
-        inputNeurons = testingData[pick]
+        inputNeurons = trainData[pick]
         correctAnswer = answers[pick]
-
-        hiddenLayer1.feedForwardAgain(numberOfNeuronsHL1, inputNeurons, hiddenLayer1.getAllWeights(), hiddenLayer1.getAllBiases())
+        hiddenLayer1.feedForwardAgain(
+            numberOfNeuronsHL1, inputNeurons, hiddenLayer1.getAllWeights(), hiddenLayer1.getAllBiases())
 
         hiddenLayer1Activations = hiddenLayer1.getAllActivations()
-        hiddenLayer2.feedForwardAgain(numberOfNeuronsHL2, hiddenLayer1Activations, hiddenLayer2.getAllWeights(), hiddenLayer2.getAllBiases())
+        hiddenLayer2.feedForwardAgain(numberOfNeuronsHL2, hiddenLayer1Activations,
+                                      hiddenLayer2.getAllWeights(), hiddenLayer2.getAllBiases())
 
         hiddenLayer2Activations = hiddenLayer2.getAllActivations()
-        outputLayer.feedForwardAgain(numberOfNeuronsOL, hiddenLayer2Activations, outputLayer.getAllWeights(), outputLayer.getAllBiases())
+        outputLayer.feedForwardAgain(numberOfNeuronsOL, hiddenLayer2Activations,
+                                     outputLayer.getAllWeights(), outputLayer.getAllBiases())
 
-        # print(f"Correct Answer: {correctAnswer}")
-        # print(f"{outputLayer.printPrediction()}")
-        # print(f"Cost: {outputLayer.getCost()}")
-        print(f"Correct Answer: {correctAnswer} {outputLayer.printPrediction()}")
+        print(f"{outputLayer.printPrediction()}, correct: {correctAnswer}")
+    print("Test Data below")
+    for i in range(0, len(testData)):
+        pick = i
+        inputNeurons = testData[pick]
+        correctAnswer = testAnswers[pick]
+        hiddenLayer1.feedForwardAgain(
+            numberOfNeuronsHL1, inputNeurons, hiddenLayer1.getAllWeights(), hiddenLayer1.getAllBiases())
+
+        hiddenLayer1Activations = hiddenLayer1.getAllActivations()
+        hiddenLayer2.feedForwardAgain(numberOfNeuronsHL2, hiddenLayer1Activations,
+                                      hiddenLayer2.getAllWeights(), hiddenLayer2.getAllBiases())
+
+        hiddenLayer2Activations = hiddenLayer2.getAllActivations()
+        outputLayer.feedForwardAgain(numberOfNeuronsOL, hiddenLayer2Activations,
+                                     outputLayer.getAllWeights(), outputLayer.getAllBiases())
+
+        print(f"{outputLayer.printPrediction()}, correct: {correctAnswer}")
+    print(accuracy)
+
 
 # code for fit function(training)
 
-# fit                         $ &
 
-
+# fit (train)                 $ &
 def fit(epochs, learnRate, printOut, reUse):
     '''
         usage - fit(epochs, learnRate, printOut, reUse)
@@ -819,25 +860,29 @@ def fit(epochs, learnRate, printOut, reUse):
     if epochs < 1:
         quit(code="epoch is less than 1 (not logical to repeat 0 or negative times)")
     # training data
-    global importedData
-    global trainingData
+    global trainData
+    global testData
     global trainingDataSelection
     global numberOfNeuronsHL1
     global numberOfNeuronsHL2
+    global inputNeurons
+    global hiddenLayer1
+    global hiddenLayer2
+    global outputLayer
+    global answers
+    answers = separateAnswers(trainData)
     plotYAxis = []
-    importedData = []
-    importedData = savedImportedData
-    importedData = jsonToDictionary(importedData)
-    seperateAnswers(importedData)
+    trainData = []
+    trainData = savedTrainData
+    separateAnswers(trainData)
     outputCount = set(answers)
     numberOfNeuronsOL = len(outputCount)
-    trainingData = importedData
+    trainingData = trainData
     trainingData = sigmoidInput(trainingData)
-    trainingDataSelection = r.randrange(0, len(testingData))
-    testingDataSelection = r.randrange(0, len(testingData))
+    trainingDataSelection = r.randrange(0, len(trainData))
+    testingDataSelection = r.randrange(0, len(testData))
     setupInputNeurons(trainingData[trainingDataSelection])
-
-    # initalize model
+    # initialize model
     w = open("weights.txt", "r+")
     read = w.readlines()
     gottenWeights = []
@@ -883,8 +928,7 @@ def fit(epochs, learnRate, printOut, reUse):
     ########################################################################
 
     backpropogate(epochs, learnRate, inputNeurons, hiddenLayer1, hiddenLayer2, outputLayer,
-          printOut, numberOfNeuronsHL1, numberOfNeuronsHL2, numberOfNeuronsOL)
-
+                  printOut, numberOfNeuronsHL1, numberOfNeuronsHL2, numberOfNeuronsOL)
 
  # fit(epochs, learnRate, printOut, reUse)
  # epochs are how many times you train on a certain sample
@@ -893,463 +937,29 @@ def fit(epochs, learnRate, printOut, reUse):
  # reUse specifies whether to import the old weights and biases
 numberOfNeuronsHL1 = 5
 numberOfNeuronsHL2 = 10
-fit(50, 0.1, False, False)
-#implement                  $ &
+startTime = t.time()
+# implement                    $ &
+fit(10, 0.1, False, False)
+endTime = t.time()
+elapsedTime = endTime - startTime
+
+
+def time_convert(sec):
+    mins = sec // 60
+    sec = sec % 60
+    hours = mins // 60
+    mins = mins % 60
+    print("Time Lapsed = {0}:{1}:{2}".format(int(hours), int(mins), sec))
+
+
+time_convert(elapsedTime)
+
+# plots things
+plt.xlabel("Epoch")
+plt.ylabel("Cost")
+plt.fill_between([x for x in range(0, len(plotYAxis))], plotYAxis)
 plt.plot(plotYAxis)
 plt.show()
-
-# def trainBatch(X, batchReps, batchSize, epochs, learnRate, inputNeurons, hiddenLayer1, hiddenLayer2, outputLayer, printOut, numberOfNeuronsHL1, numberOfNeuronsHL2, numberOfNeuronsOL):
-#     global correctAnswer
-#     global plotYAxis
-#     for _ in range(0, batchReps-1):
-#         for batch in range(0, batchSize-1):
-#             # batch = r.randrange(0, batchSize-1)
-#             correctAnswer = str(answers[batch])
-#             batchData = []
-#             for i in X[batch]:
-#                 batchData.append(i)
-#             inputNeurons = []
-#             for i in batchData:
-#                 inputNeurons.append(i)
-
-#             def getAvgTotCost(batchSize_, batch_):
-#                 totCost = 0
-#                 for rep in range(1, batchSize_):
-#                     batchData = []
-#                     for i in X[rep]:
-#                         batchData.append(i)
-#                     inputNeurons = []
-#                     for i in batchData:
-#                         inputNeurons.append(i)
-#                     hiddenLayer1.feedForwardAgain(numberOfNeuronsHL1, inputNeurons, hiddenLayer1.getAllWeights(), hiddenLayer1.getAllBiases())
-
-#                     hiddenLayer1Activations = hiddenLayer1.getAllActivations()
-#                     hiddenLayer2.feedForwardAgain(numberOfNeuronsHL2, hiddenLayer1Activations, hiddenLayer2.getAllWeights(), hiddenLayer2.getAllBiases())
-
-#                     hiddenLayer2Activations = hiddenLayer2.getAllActivations()
-#                     outputLayer.feedForwardAgain(numberOfNeuronsOL, hiddenLayer2Activations, outputLayer.getAllWeights(), outputLayer.getAllBiases())
-#                     totCost += outputLayer.getCost()
-#                 correctAnswer = str(answers[batch_])
-#                 batchData = []
-#                 for i in X[batch_]:
-#                     batchData.append(i)
-#                 inputNeurons = []
-#                 for i in batchData:
-#                     inputNeurons.append(i)
-#                 hiddenLayer1.feedForwardAgain(numberOfNeuronsHL1, inputNeurons, hiddenLayer1.getAllWeights(), hiddenLayer1.getAllBiases())
-
-#                 hiddenLayer1Activations = hiddenLayer1.getAllActivations()
-#                 hiddenLayer2.feedForwardAgain(numberOfNeuronsHL2, hiddenLayer1Activations, hiddenLayer2.getAllWeights(), hiddenLayer2.getAllBiases())
-
-#                 hiddenLayer2Activations = hiddenLayer2.getAllActivations()
-#                 outputLayer.feedForwardAgain(numberOfNeuronsOL, hiddenLayer2Activations, outputLayer.getAllWeights(), outputLayer.getAllBiases())
-#                 return totCost/batchSize_
-
-#             for epochCount in range(epochs):
-#                 neuronCount = 0
-#                 weightCount = 0
-
-#                 changeWeightAmount = learnRate
-#                 changeWeight = 0
-
-#                 # loop amount of neurons in layer
-#                 for i in range(hiddenLayer1.amountOfNeurons):
-#                     weightCount = 0
-#                     # loop amount of neurons in previous layer (loop for the weights)
-#                     for i in range(len(inputNeurons)):
-#                         changeWeight = 0
-#                         # loop for altering the weight by a little
-#                         for i in range(2):
-#                             if i == 0:
-#                                 changeWeight = float(changeWeightAmount)
-#                             else:
-#                                 changeWeight = -2 * float(changeWeightAmount)
-#                             # feed values in to get the cost
-#                             hiddenLayer1.feedForwardAgain(
-#                                 numberOfNeuronsHL1, inputNeurons, hiddenLayer1.getAllWeights(), hiddenLayer1.getAllBiases())
-#                             hiddenLayer1.changeNeuronWeightAndActivation(
-#                                 neuronCount, weightCount, changeWeight)
-
-#                             hiddenLayer1Activations = hiddenLayer1.getAllActivations()
-#                             hiddenLayer2.feedForwardAgain(
-#                                 numberOfNeuronsHL2, hiddenLayer1Activations, hiddenLayer2.getAllWeights(), hiddenLayer2.getAllBiases())
-
-#                             hiddenLayer2Activations = hiddenLayer2.getAllActivations()
-#                             outputLayer.feedForwardAgain(
-#                                 numberOfNeuronsOL, hiddenLayer2Activations, outputLayer.getAllWeights(), outputLayer.getAllBiases())
-
-#                             if i == 0:
-#                                 # initialCost = outputLayer.getCost()
-#                                 initialCost = getAvgTotCost(batchSize, batch)
-#                             else:
-#                                 # finalCost = outputLayer.getCost()
-#                                 finalCost = getAvgTotCost(batchSize, batch)
-
-#                             if printOut:
-#                                 print(f"Correct Answer: {correctAnswer}")
-#                                 print(f"{outputLayer.printPrediction()}")
-#                                 print(f"Cost: {outputLayer.getCost()}")
-#                         changeWeight = changeWeightAmount
-#                         hiddenLayer1.changeNeuronWeightAndActivation(
-#                             neuronCount, weightCount, changeWeight)
-#                         if initialCost < finalCost:
-#                             hiddenLayer1.changeNeuronWeightAndActivation(
-#                                 neuronCount, weightCount, changeWeight)
-#                         else:
-#                             changeWeight = -1 * changeWeightAmount
-#                             hiddenLayer1.changeNeuronWeightAndActivation(
-#                                 neuronCount, weightCount, changeWeight)
-#                         weightCount += 1
-#                     neuronCount += 1
-
-#                 #########################################################
-#                 # train hidden layer 2 weights
-
-#                 neuronCount = 0
-#                 weightCount = 0
-
-#                 changeWeightAmount = learnRate
-#                 changeWeight = 0
-
-#                 # loop amount of neurons in layer
-#                 for i in range(hiddenLayer2.amountOfNeurons):
-#                     weightCount = 0
-#                     # loop amount of neurons in previous layer (loop for the weights)
-#                     for i in range(hiddenLayer1.amountOfNeurons):
-#                         changeWeight = 0
-#                         # loop for altering the weight by a little
-#                         for i in range(2):
-#                             if i == 0:
-#                                 changeWeight = float(changeWeightAmount)
-#                             else:
-#                                 changeWeight = -2 * float(changeWeightAmount)
-#                             # feed values in to get the cost
-#                             hiddenLayer1.feedForwardAgain(
-#                                 numberOfNeuronsHL1, inputNeurons, hiddenLayer1.getAllWeights(), hiddenLayer1.getAllBiases())
-
-#                             hiddenLayer1Activations = hiddenLayer1.getAllActivations()
-#                             hiddenLayer2.feedForwardAgain(
-#                                 numberOfNeuronsHL2, hiddenLayer1Activations, hiddenLayer2.getAllWeights(), hiddenLayer2.getAllBiases())
-#                             hiddenLayer2.changeNeuronWeightAndActivation(
-#                                 neuronCount, weightCount, changeWeight)
-
-#                             hiddenLayer2Activations = hiddenLayer2.getAllActivations()
-#                             outputLayer.feedForwardAgain(
-#                                 numberOfNeuronsOL, hiddenLayer2Activations, outputLayer.getAllWeights(), outputLayer.getAllBiases())
-
-#                             if i == 0:
-#                                 # initialCost = outputLayer.getCost()
-#                                 initialCost = getAvgTotCost(batchSize, batch)
-#                             else:
-#                                 # finalCost = outputLayer.getCost()
-#                                 finalCost = getAvgTotCost(batchSize, batch)
-
-#                             if printOut:
-#                                 print(f"Correct Answer: {correctAnswer}")
-#                                 print(f"{outputLayer.printPrediction()}")
-#                                 print(f"Cost: {outputLayer.getCost()}")
-
-#                         changeWeight = changeWeightAmount
-#                         hiddenLayer2.changeNeuronWeightAndActivation(
-#                             neuronCount, weightCount, changeWeight)
-#                         if initialCost < finalCost:
-#                             hiddenLayer2.changeNeuronWeightAndActivation(
-#                                 neuronCount, weightCount, changeWeight)
-#                         else:
-#                             changeWeight = -1 * changeWeightAmount
-#                             hiddenLayer2.changeNeuronWeightAndActivation(
-#                                 neuronCount, weightCount, changeWeight)
-#                         weightCount += 1
-#                     neuronCount += 1
-
-#                 #########################################################
-
-#                 # train ouput layer weights
-
-#                 neuronCount = 0
-#                 weightCount = 0
-
-#                 changeWeightAmount = learnRate
-#                 changeWeight = 0
-
-#                 # loop amount of neurons in layer
-#                 for i in range(outputLayer.amountOfNeurons):
-#                     weightCount = 0
-#                     # loop amount of neurons in previous layer (loop for the weights)
-#                     for i in range(hiddenLayer2.amountOfNeurons):
-#                         changeWeight = 0
-#                         # loop for altering the weight by a little
-#                         for i in range(2):
-#                             if i == 0:
-#                                 changeWeight = float(changeWeightAmount)
-#                             else:
-#                                 changeWeight = -2 * float(changeWeightAmount)
-#                             # feed values in to get the cost
-#                             hiddenLayer1.feedForwardAgain(
-#                                 numberOfNeuronsHL1, inputNeurons, hiddenLayer1.getAllWeights(), hiddenLayer1.getAllBiases())
-
-#                             hiddenLayer1Activations = hiddenLayer1.getAllActivations()
-#                             hiddenLayer2.feedForwardAgain(
-#                                 numberOfNeuronsHL2, hiddenLayer1Activations, hiddenLayer2.getAllWeights(), hiddenLayer2.getAllBiases())
-
-#                             hiddenLayer2Activations = hiddenLayer2.getAllActivations()
-#                             outputLayer.feedForwardAgain(
-#                                 numberOfNeuronsOL, hiddenLayer2Activations, outputLayer.getAllWeights(), outputLayer.getAllBiases())
-#                             outputLayer.changeNeuronWeightAndActivation(
-#                                 neuronCount, weightCount, changeWeight)
-
-#                             if i == 0:
-#                                 # initialCost = outputLayer.getCost()
-#                                 initialCost = getAvgTotCost(batchSize, batch)
-#                             else:
-#                                 # finalCost = outputLayer.getCost()
-#                                 finalCost = getAvgTotCost(batchSize, batch)
-
-#                             if printOut:
-#                                 print(f"Correct Answer: {correctAnswer}")
-#                                 print(f"{outputLayer.printPrediction()}")
-#                                 print(f"Cost: {outputLayer.getCost()}")
-
-#                         changeWeight = changeWeightAmount
-#                         outputLayer.changeNeuronWeightAndActivation(
-#                             neuronCount, weightCount, changeWeight)
-#                         if initialCost < finalCost:
-#                             outputLayer.changeNeuronWeightAndActivation(
-#                                 neuronCount, weightCount, changeWeight)
-#                         else:
-#                             changeWeight = -1 * changeWeightAmount
-#                             outputLayer.changeNeuronWeightAndActivation(
-#                                 neuronCount, weightCount, changeWeight)
-#                         weightCount += 1
-#                     neuronCount += 1
-
-
-#                 #######################################################
-#                 # training for hidden layer 1 biases
-#                 neuronCount = 0
-
-#                 changeBiasAmount = learnRate
-#                 changeBias = 0
-
-#                 # loop amount of neurons in layer
-#                 for i in range(hiddenLayer1.amountOfNeurons):
-#                     # loop amount of neurons in previous layer (loop for the biases)
-
-#                     changeBias = 0
-#                     # loop for altering the bias by a little
-#                     for i in range(2):
-#                         if i == 0:
-#                             changeBias = float(changeBiasAmount)
-#                         else:
-#                             changeBias = -2 * float(changeBiasAmount)
-#                         # feed values in to get the cost
-#                         hiddenLayer1.feedForwardAgain(
-#                             numberOfNeuronsHL1, inputNeurons, hiddenLayer1.getAllWeights(), hiddenLayer1.getAllBiases())
-#                         hiddenLayer1.changeNeuronBiasAndActivation(
-#                             neuronCount, changeBias)
-
-#                         hiddenLayer1Activations = hiddenLayer1.getAllActivations()
-#                         hiddenLayer2.feedForwardAgain(
-#                             numberOfNeuronsHL2, hiddenLayer1Activations, hiddenLayer2.getAllWeights(), hiddenLayer2.getAllBiases())
-
-#                         hiddenLayer2Activations = hiddenLayer2.getAllActivations()
-#                         outputLayer.feedForwardAgain(
-#                             numberOfNeuronsOL, hiddenLayer2Activations, outputLayer.getAllWeights(), outputLayer.getAllBiases())
-
-#                         if i == 0:
-#                             # initialCost = outputLayer.getCost()
-#                             initialCost = getAvgTotCost(batchSize, batch)
-#                         else:
-#                             # finalCost = outputLayer.getCost()
-#                             finalCost = getAvgTotCost(batchSize, batch)
-
-#                         if printOut:
-#                             print(f"Correct Answer: {correctAnswer}")
-#                             print(f"{outputLayer.printPrediction()}")
-#                             print(f"Cost: {outputLayer.getCost()}")
-
-#                     changeBias = changeBiasAmount
-#                     hiddenLayer1.changeNeuronBiasAndActivation(
-#                         neuronCount, changeBias)
-#                     if initialCost < finalCost:
-#                         hiddenLayer1.changeNeuronBiasAndActivation(
-#                             neuronCount, changeBias)
-#                     else:
-#                         changeBias = -1 * changeBiasAmount
-#                         hiddenLayer1.changeNeuronBiasAndActivation(
-#                             neuronCount, changeBias)
-#                     neuronCount += 1
-
-#                 # training for hidden layer 2 biases
-#                 neuronCount = 0
-
-#                 changeBiasAmount = learnRate
-#                 changeBias = 0
-
-#                 # loop amount of neurons in layer
-#                 for i in range(hiddenLayer2.amountOfNeurons):
-#                     # loop amount of neurons in previous layer (loop for the biases)
-
-#                     changeBias = 0
-#                     # loop for altering the bias by a little
-#                     for i in range(2):
-#                         if i == 0:
-#                             changeBias = float(changeBiasAmount)
-#                         else:
-#                             changeBias = -2 * float(changeBiasAmount)
-#                         # feed values in to get the cost
-#                         hiddenLayer1.feedForwardAgain(
-#                             numberOfNeuronsHL1, inputNeurons, hiddenLayer1.getAllWeights(), hiddenLayer1.getAllBiases())
-
-#                         hiddenLayer1Activations = hiddenLayer1.getAllActivations()
-#                         hiddenLayer2.feedForwardAgain(
-#                             numberOfNeuronsHL2, hiddenLayer1Activations, hiddenLayer2.getAllWeights(), hiddenLayer2.getAllBiases())
-#                         hiddenLayer2.changeNeuronBiasAndActivation(
-#                             neuronCount, changeBias)
-
-#                         hiddenLayer2Activations = hiddenLayer2.getAllActivations()
-#                         outputLayer.feedForwardAgain(
-#                             numberOfNeuronsOL, hiddenLayer2Activations, outputLayer.getAllWeights(), outputLayer.getAllBiases())
-
-#                         if i == 0:
-#                             # initialCost = outputLayer.getCost()
-#                             initialCost = getAvgTotCost(batchSize, batch)
-#                         else:
-#                             # finalCost = outputLayer.getCost()
-#                             finalCost = getAvgTotCost(batchSize, batch)
-
-#                         if printOut:
-#                             print(f"Correct Answer: {correctAnswer}")
-#                             print(f"{outputLayer.printPrediction()}")
-#                             print(f"Cost: {outputLayer.getCost()}")
-
-#                     changeBias = changeBiasAmount
-#                     hiddenLayer2.changeNeuronBiasAndActivation(
-#                         neuronCount, changeBias)
-#                     if initialCost < finalCost:
-#                         hiddenLayer2.changeNeuronBiasAndActivation(
-#                             neuronCount, changeBias)
-#                     else:
-#                         changeBias = -1 * changeBiasAmount
-#                         hiddenLayer2.changeNeuronBiasAndActivation(
-#                             neuronCount, changeBias)
-#                     neuronCount += 1
-
-#                 # training for hidden layer 3 biases
-#                 neuronCount = 0
-
-#                 changeBiasAmount = learnRate
-#                 changeBias = 0
-
-#                 # loop amount of neurons in layer
-#                 for i in range(outputLayer.amountOfNeurons):
-#                     # loop amount of neurons in previous layer (loop for the biases)
-
-#                     changeBias = 0
-#                     # loop for altering the bias by a little
-#                     for i in range(2):
-#                         if i == 0:
-#                             changeBias = float(changeBiasAmount)
-#                         else:
-#                             changeBias = -2 * float(changeBiasAmount)
-#                         # feed values in to get the cost
-#                         hiddenLayer1.feedForwardAgain(
-#                             numberOfNeuronsHL1, inputNeurons, hiddenLayer1.getAllWeights(), hiddenLayer1.getAllBiases())
-
-#                         hiddenLayer1Activations = hiddenLayer1.getAllActivations()
-#                         hiddenLayer2.feedForwardAgain(
-#                             numberOfNeuronsHL2, hiddenLayer1Activations, hiddenLayer2.getAllWeights(), hiddenLayer2.getAllBiases())
-
-#                         hiddenLayer2Activations = hiddenLayer2.getAllActivations()
-#                         outputLayer.feedForwardAgain(
-#                             numberOfNeuronsOL, hiddenLayer2Activations, outputLayer.getAllWeights(), outputLayer.getAllBiases())
-#                         outputLayer.changeNeuronBiasAndActivation(
-#                             neuronCount, changeBias)
-
-#                         if i == 0:
-#                             # initialCost = outputLayer.getCost()
-#                             initialCost = getAvgTotCost(batchSize, batch)
-#                         else:
-#                             # finalCost = outputLayer.getCost()
-#                             finalCost = getAvgTotCost(batchSize, batch)
-
-#                         if printOut:
-#                             print(f"Correct Answer: {correctAnswer}")
-#                             print(f"{outputLayer.printPrediction()}")
-#                             print(f"Cost: {outputLayer.getCost()}")
-
-#                     changeBias = changeBiasAmount
-#                     outputLayer.changeNeuronBiasAndActivation(
-#                         neuronCount, changeBias)
-#                     if initialCost < finalCost:
-#                         outputLayer.changeNeuronBiasAndActivation(
-#                             neuronCount, changeBias)
-#                     else:
-#                         changeBias = -1 * changeBiasAmount
-#                         outputLayer.changeNeuronBiasAndActivation(
-#                             neuronCount, changeBias)
-#                     neuronCount += 1
-
-#             print(f"Correct Answer: {correctAnswer}")
-#             print(f"{outputLayer.printPrediction()}")
-#             print(f"Cost: {outputLayer.getCost()}")
-#             plotYAxis.append(outputLayer.getCost())
-#             ##
-
-#             w = open("weights.txt", "r+")
-#             w.truncate(0)
-
-#             weightsHL1 = hiddenLayer1.getAllWeights()
-#             weightsHL2 = hiddenLayer2.getAllWeights()
-#             weightsOL = outputLayer.getAllWeights()
-
-#             w.write(str(weightsHL1))
-#             w.write("\n")
-#             w.write(str(weightsHL2))
-#             w.write("\n")
-#             w.write(str(weightsOL))
-#             w.close()
-
-#             ##
-#             b = open("biases.txt", "r+")
-#             b.truncate(0)
-
-#             biasesHL1 = hiddenLayer1.getAllBiases()
-#             biasesHL2 = hiddenLayer2.getAllBiases()
-#             biasesOL = outputLayer.getAllBiases()
-
-#             b.write(str(biasesHL1))
-#             b.write("\n")
-#             b.write(str(biasesHL2))
-#             b.write("\n")
-#             b.write(str(biasesOL))
-#             b.close()
-
-#     print(plotYAxis)
-#     # clear the terminal screen for ease on eyes
-#     # os.system("cls")
-#     # os.system("cls")
-#     print("------------------------------------------------")
-
-
-#     for i in range(20):
-#         inputNeurons_ = importedTestingData[r.randrange(0, len(importedTestingData))]
-#         correctAnswer = answers[r.randrange(0, len(importedTestingData))]
-#         hiddenLayer1.feedForwardAgain(numberOfNeuronsHL1, inputNeurons_,
-#                                     hiddenLayer1.getAllWeights(), hiddenLayer1.getAllBiases())
-
-#         hiddenLayer1Activations = hiddenLayer1.getAllActivations()
-#         hiddenLayer2.feedForwardAgain(numberOfNeuronsHL2, hiddenLayer1Activations,
-#                                     hiddenLayer2.getAllWeights(), hiddenLayer2.getAllBiases())
-
-#         hiddenLayer2Activations = hiddenLayer2.getAllActivations()
-#         outputLayer.feedForwardAgain(numberOfNeuronsOL, hiddenLayer2Activations,
-#                                     outputLayer.getAllWeights(), outputLayer.getAllBiases())
-
-#         print(f"Correct Answer: {correctAnswer}")
-#         print(f"{outputLayer.printPrediction()}")
-#         print(f"Cost: {outputLayer.getCost()}")
-
 
 ###########################################
 
@@ -1472,7 +1082,7 @@ plt.show()
 
 #         #########################################################
 
-#         # train ouput layer weights
+#         # train output layer weights
 
 #         neuronCount = 0
 #         weightCount = 0
