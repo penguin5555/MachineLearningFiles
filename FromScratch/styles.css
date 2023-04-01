@@ -1,0 +1,162 @@
+body {
+    background-color: rgb(168, 172, 176);
+    overflow: hidden;
+}
+#opening {
+    animation-name: scale10;
+    animation-duration: 1s;
+    animation-fill-mode: forwards;
+    animation-delay: 3.3s;
+    animation-timing-function:cubic-bezier(0.785, 0.135, 0.15, 0.86);
+    display: block;
+    text-align: center;
+    font-family: system-ui;
+    padding-bottom: 20px;
+    color: rgb(0, 0, 0);
+    font-size: 0%;
+    font-weight: 700;
+    padding-top: 20px;
+}
+@keyframes scale10 {
+    from {font-size: 0%;}
+    to {font-size: 150%;}
+}
+#grid-container::before {
+    animation-name: scale4;
+    animation-duration: 1s;
+    animation-fill-mode: forwards;
+    animation-delay: 3s;
+    animation-timing-function:cubic-bezier(0.785, 0.135, 0.15, 0.86);
+    content: "";
+    border-radius: 9px;
+    border: 2px solid rgb(0, 0, 0);
+    width: 0em;
+    height: 0em;
+    position: absolute;
+    top: 190px;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgb(147, 153, 160);
+}
+@keyframes scale4 {
+    from {width: 0em; height: 0em;}
+    to {width: 16em; height: 16em;}
+}
+#grid-container {
+    display: grid;
+    grid-template-columns: repeat(8, 29px);
+    grid-template-rows: repeat(8, 29px);
+    justify-content: center;
+    background-color: rgba(0,0,255,0.0);
+    user-select: none;
+}
+.grid-item {
+    width: 0px;
+    height: 0px;
+    left: 10px;
+    top: 10px;
+    position: relative;
+    border: 500px;
+    opacity: 40%;
+    user-select: none;
+}
+.grid-item {
+    animation-name: scale;
+    animation-duration: 2s;
+    animation-fill-mode: forwards;
+    position: relative;
+    background-color: rgb(203, 210, 219);
+    border-radius: 0px;
+    opacity: 40%;
+    user-select: none;
+}
+@keyframes scale {
+    from {width: 0px; height: 0px; left: 10px; top: 10px; border: 2px solid rgba(0, 0, 0, 0.0); border-radius: 0px;}
+    to {width: 25px; height: 25px; left: 0px; top: 0px; border: 2px solid rgba(0, 0, 0, 1.0); border-radius: 8px;}
+}
+#clear {
+    animation-name: scale2;
+    animation-duration: 1s;
+    animation-fill-mode: forwards;
+    animation-delay: 4.3s;
+    animation-timing-function:cubic-bezier(0.23, 1, 0.320, 1);
+    padding: 10px;
+    border: 2px solid black;
+    border-radius: 5px;
+    align-items: center;
+    font-family: system-ui;
+    position: relative;
+    font-size:large;
+    display: flex;
+    justify-content: center;
+    background-color: rgb(212, 180, 180);
+    font-weight: 700;
+    width: 440%; 
+    height: 14%; 
+    right: 1000px; 
+    top: 70px; 
+    padding-bottom: 12px;
+}
+@keyframes scale2 {
+    from {right: 1000px;}
+    to {right: -52px;}
+}
+#copy {
+    animation-name: scale3;
+    animation-duration: 1s;
+    animation-fill-mode: forwards;
+    animation-delay: 4s;
+    animation-timing-function:cubic-bezier(0.23, 1, 0.320, 1);
+    font-family: system-ui;
+    font-weight: 700;
+    padding: 10px;
+    border: 2px solid black;
+    border-radius: 5px;
+    align-items: center;
+    position: relative;
+    font-size:large;
+    display: flex;
+    justify-content: center;
+    background-color: rgb(193, 212, 180);
+    width: 440%; 
+    height: 10px;
+    top: 40px;
+    right: -1000px;
+    padding-bottom: 12px;
+}
+@keyframes scale3 {
+    from {right: -1000px;}
+    to {right: -22px;}
+}
+#load::placeholder {
+    opacity: 100%;
+    color: darkslategray;
+}
+#load {
+    height: 20px;
+    width: 80px;
+    border: 0;
+    border-bottom: 2px solid darkslategray;
+    background-color: rgb(168, 172, 176);
+    color: darkslategray;
+    font-family: system-ui;
+    font-weight: 600;
+    outline-offset: 0px;
+    outline: none;
+    position: relative;
+    top: 100px;
+    left: 1000px;
+    animation-name: scale5;
+    animation-duration: 1s;
+    animation-fill-mode: forwards;
+    animation-delay: 4.6s;
+    animation-timing-function:cubic-bezier(0.23, 1, 0.320, 1);
+}
+@keyframes scale5 {
+    from {left: 1000px;}
+    to {left: 15px;}
+}
+#output {
+    width: 100px;
+    height: 100px;
+}

@@ -1,83 +1,121 @@
-# neural network that outputs the music genre that a person
-# would like based on their age
+if __name__ == "__main__":
+    # imports                         $ &
+    import pandas as pd
+    import random as r
+    import os
+    import numpy as np
+    import matplotlib.pyplot as plt
+    import time as t
+    import pickle
+    import csv
+    from sklearn.datasets import load_digits
+    from sklearn.model_selection import train_test_split
+    global answerIdx
+    answerIdx = 64
+    separateData = False
 
-# decision tree or K-mode clustering
+    # clear the terminal screen for ease on eyes
+    os.system("cls")
+    os.system("cls")
+    # initialize data
+    # data = pd.read_csv("FromScratch\data.csv")
 
-# //////////////////////////////
-# keys
-# //////////////////////////////
-# all numbers are the ages
-# //////////////////////////////
-# 0 is for man
-# 1 is for woman
-# //////////////////////////////
-# 1 is for hip-hop
-# 2 is for pop
-# 3 is for jazz
-# 4 is for k-pop
-# 5 is for dance
-# 6 is for classical
+    # if separateData:
+    #     trainData = []
+    #     testData = []
 
-# imports                         $ &
-import pandas as pd
-import re
-import random as r
-import os
-import numpy as np
-import matplotlib.pyplot as plt
-import time as t
-global answerIdx
-answerIdx = 100
+    #     # make csv into an array
+    #     temp = []
+    #     for rowNumber in range(len(data)):
+    #         row = []
+    #         for item in range(len(data.columns)):
+    #             row.append(data.iloc[rowNumber, item])
+    #         temp.append(row)
+    #     data = list(temp)
 
-# clear the terminal screen for ease on eyes
-os.system("cls")
-os.system("cls")
+    #     # shuffle data and put it into train and test data
+    #     for i in range(20):
+    #         r.shuffle(data)
+    #     for i in range(len(data)):
+    #         if r.randint(0, 1) == 0:
+    #             testData.append(data[i])
+    #         else:
+    #             trainData.append(data[i])
+    #     # make the answers into numbers
+    #     idx = 0
+    #     for i in trainData:
+    #         idx2 = 0
+    #         for ii in i:
+    #             if ii == 'Five':
+    #                 trainData[idx][idx2] = 1
+    #             elif ii == 'NotFive':
+    #                 trainData[idx][idx2] = 0
+    #             idx2 += 1
+    #         idx += 1
+    #     idx = 0
+    #     for i in testData:
+    #         idx2 = 0
+    #         for ii in i:
+    #             if ii == 'Five':
+    #                 testData[idx][idx2] = 1
+    #             elif ii == 'NotFive':
+    #                 testData[idx][idx2] = 0
+    #             idx2 += 1
+    #         idx += 1
 
-# initialize data
-data = pd.read_csv("five.csv")
-trainData = []
-testData = []
+    #     savedTrainData = list(trainData)
+    #     savedTestData = list(testData)
+    # else:
+    #     trainData = []
+    #     testData = []
 
-# make csv into an array
-temp = []
-for rowNumber in range(len(data)):
-    row = []
-    for item in range(len(data.columns)):
-        row.append(data.iloc[rowNumber, item])
-    temp.append(row)
-data = list(temp)
+    #     # make csv into an array
+    #     temp = []
+    #     for rowNumber in range(len(data)):
+    #         row = []
+    #         for item in range(len(data.columns)):
+    #             row.append(data.iloc[rowNumber, item])
+    #         temp.append(row)
+    #     data = list(temp)
 
-# shuffle data and put it into train and test data
-for i in range(20):
-    r.shuffle(data)
-for i in range(len(data)):
-    if r.randint(0, 1) == 0:
-        testData.append(data[i])
-    else:
-        trainData.append(data[i])
-# make the answers into numbers
-idx = 0
-for i in trainData:
-    idx2 = 0
-    for ii in i:
-        if ii == 'Five':
-            trainData[idx][idx2] = 1
-        elif ii == 'NotFive':
-            trainData[idx][idx2] = 0
-        idx2 += 1
-    idx += 1
-idx = 0
-for i in testData:
-    idx2 = 0
-    for ii in i:
-        if ii == 'Five':
-            testData[idx][idx2] = 1
-        elif ii == 'NotFive':
-            testData[idx][idx2] = 0
-        idx2 += 1
-    idx += 1
-savedTrainData = list(trainData)
-savedTestData = list(testData)
+    #     # shuffle data and put it into train and test data
+    #     for i in range(20):
+    #         r.shuffle(data)
+    #     for i in range(len(data)):
+    #         trainData.append(data[i])
+    #     # make the answers into numbers
+    #     idx = 0
+    #     for i in trainData:
+    #         idx2 = 0
+    #         for ii in i:
+    #             if ii == 'Five':
+    #                 trainData[idx][idx2] = 1
+    #             elif ii == 'NotFive':
+    #                 trainData[idx][idx2] = 0
+    #             idx2 += 1
+    #         idx += 1
+
+    #     savedTrainData = list(trainData)
+
+    # Load the digits dataset      $ &
+    digits = load_digits()
+    # Preprocess the images
+    images = digits.images.astype('float32') / 16.0
+    # Generate the pixel dataset
+    pixel_dataset = []
+    for image in images:
+        pixels = []
+        for row in image:
+            for pixel in row:
+                pixels.append(round(1 if pixel > 0.5 else 0))
+        pixel_dataset.append(pixels)
+
+    # Generate the label dataset
+    label_dataset = digits.target.tolist()
+
+    trainData, testData, trainAnswers, testAnswers = train_test_split(
+        pixel_dataset, label_dataset, test_size=0.3, random_state=42
+    )
 
 
 # start of data config
@@ -108,12 +146,24 @@ def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=
 # convert the dictionary from the json file to a dictionary with inputs to the network
 
 
-def sigmoid(val):
-    # ReLu
-    # if val > 0:
-    #     pass
-    # else:
-    #     val = val * 0.1
+def time_convert(sec, inTrain=False):
+    mins = sec // 60
+    sec = sec % 60
+    hours = mins // 60
+    mins = mins % 60
+    if inTrain:
+        return "{0}:{1}:{2}".format(int(hours), int(mins), sec)
+    else:
+        print("Time Lapsed = {0}:{1}:{2}".format(int(hours), int(mins), sec))
+
+
+def sigmoid(val, outputLayer=0):
+    if outputLayer != 0:
+        # ReLu
+        if val > 0:
+            return val
+        else:
+            return val * 0.1
     # sigmoid for getting rid of some errors
     if val > 0:
         return 1/(1 + np.exp(-val))
@@ -166,10 +216,10 @@ def setupInputNeurons(items):
 
 
 # testing data
-testData = savedTestData
-testAnswers = separateAnswers(testData)
-testData = sigmoidInput(testData)
-testDataSelection = r.randrange(0, len(testData))
+# testData = savedTestData
+# testAnswers = separateAnswers(testData)
+# testData = sigmoidInput(testData)
+# testDataSelection = r.randrange(0, len(testData))
 
 
 # setup the input neurons with a random selection of the imported data
@@ -184,7 +234,7 @@ testDataSelection = r.randrange(0, len(testData))
 
 
 class neuron:
-    def __init__(self, id, activationsOfPreviousLayer, fedInWeights, fedInBias):
+    def __init__(self, id, activationsOfPreviousLayer, fedInWeights, fedInBias, oL=0):
         self.activationsOfPreviousLayer = activationsOfPreviousLayer
         self.fedInWeights = fedInWeights
         self.id = id
@@ -198,7 +248,10 @@ class neuron:
             self.weightedSum += (item * self.activationsOfPreviousLayer[idx])
             idx += 1
         # calculate the activation from 0 to 1 -> sigmoid(weightedSum + bias)
-        self.activation = sigmoid(self.weightedSum + self.bias)
+        if oL:
+            self.activation = sigmoid(self.weightedSum + self.bias, 1)
+        else:
+            self.activation = sigmoid(self.weightedSum + self.bias)
 
     def getActivation(self):
         return self.activation
@@ -238,7 +291,7 @@ class neuron:
 
 
 class layer:
-    def __init__(self, amountOfNeurons, activationsOfPreviousLayer, passInWeights=[], passInBiases=[]):
+    def __init__(self, amountOfNeurons, activationsOfPreviousLayer, passInWeights=[], passInBiases=[], oL=0):
         self.activationsOfPreviousLayer = activationsOfPreviousLayer
         self.amountOfNeurons = amountOfNeurons
         self.neurons = []
@@ -252,19 +305,17 @@ class layer:
             for _ in self.activationsOfPreviousLayer:
                 feedWeights.append(r.uniform(-1.0, 1.0))
             # set a random number for the bias
-            feedBias = r.randrange(-5.0, 5.0)
+            feedBias = r.randrange(-5, 5)
             self.neurons[idx] = neuron(
-                idx, self.activationsOfPreviousLayer, feedWeights, feedBias)
+                idx, self.activationsOfPreviousLayer, feedWeights, feedBias, oL)
 
         if passInWeights != []:
             if passInBiases != []:
                 for idx in range(len(self.neurons)):
                     # feed in some weights that are given already
-                    feedWeights = []
-                    for _ in self.activationsOfPreviousLayer:
-                        feedWeights.append(float(passInWeights[idx]))
+                    feedWeights = passInWeights[idx]
                     # set a random number for the bias
-                    feedBias = float(passInBiases[idx])
+                    feedBias = passInBiases[idx]
                     self.neurons[idx] = neuron(
                         idx, self.activationsOfPreviousLayer, feedWeights, feedBias)
 
@@ -372,15 +423,14 @@ class layer:
 
 
 # backpropogate             $ &
-def backpropogate(epochs, learnRate, inputNeurons, hiddenLayer1, hiddenLayer2, outputLayer, printOut, numberOfNeuronsHL1, numberOfNeuronsHL2, numberOfNeuronsOL):
+def backpropogate(batchSize, epochs, learnRate, inputNeurons, hiddenLayer1, hiddenLayer2, outputLayer, printOut, numberOfNeuronsHL1, numberOfNeuronsHL2, numberOfNeuronsOL):
     global correctAnswer
     global answers
-    global trainingData
     global testData
     global testAnswers
     printProgressBar(0, 1)
 
-    def avgCost(hiddenLayer1_, hiddenLayer2_, outputLayer_):
+    def avgCost(hiddenLayer1_, hiddenLayer2_, outputLayer_, batchSize):
         global correctAnswer
         global answers
         global trainData
@@ -419,7 +469,9 @@ def backpropogate(epochs, learnRate, inputNeurons, hiddenLayer1, hiddenLayer2, o
             return outputLayer_
 
     for epochCount in range(0, epochs):
-        baselineCost = avgCost(hiddenLayer1, hiddenLayer2, outputLayer)
+        epochT1 = t.time()
+        baselineCost = avgCost(
+            hiddenLayer1, hiddenLayer2, outputLayer, batchSize)
         neuronCount = 0
         weightCount = 0
 
@@ -454,10 +506,10 @@ def backpropogate(epochs, learnRate, inputNeurons, hiddenLayer1, hiddenLayer2, o
 
                     if i == 0:
                         initialCost = avgCost(
-                            hiddenLayer1, hiddenLayer2, outputLayer)
+                            hiddenLayer1, hiddenLayer2, outputLayer, batchSize)
                     else:
                         finalCost = avgCost(
-                            hiddenLayer1, hiddenLayer2, outputLayer)
+                            hiddenLayer1, hiddenLayer2, outputLayer, batchSize)
 
                     if printOut:
                         print(f"Correct Answer: {correctAnswer}")
@@ -514,10 +566,10 @@ def backpropogate(epochs, learnRate, inputNeurons, hiddenLayer1, hiddenLayer2, o
 
                     if i == 0:
                         initialCost = avgCost(
-                            hiddenLayer1, hiddenLayer2, outputLayer)
+                            hiddenLayer1, hiddenLayer2, outputLayer, batchSize)
                     else:
                         finalCost = avgCost(
-                            hiddenLayer1, hiddenLayer2, outputLayer)
+                            hiddenLayer1, hiddenLayer2, outputLayer, batchSize)
 
                     if printOut:
                         print(f"Correct Answer: {correctAnswer}")
@@ -575,10 +627,10 @@ def backpropogate(epochs, learnRate, inputNeurons, hiddenLayer1, hiddenLayer2, o
 
                     if i == 0:
                         initialCost = avgCost(
-                            hiddenLayer1, hiddenLayer2, outputLayer)
+                            hiddenLayer1, hiddenLayer2, outputLayer, batchSize)
                     else:
                         finalCost = avgCost(
-                            hiddenLayer1, hiddenLayer2, outputLayer)
+                            hiddenLayer1, hiddenLayer2, outputLayer, batchSize)
 
                     if printOut:
                         print(f"Correct Answer: {correctAnswer}")
@@ -631,10 +683,10 @@ def backpropogate(epochs, learnRate, inputNeurons, hiddenLayer1, hiddenLayer2, o
 
                 if i == 0:
                     initialCost = avgCost(
-                        hiddenLayer1, hiddenLayer2, outputLayer)
+                        hiddenLayer1, hiddenLayer2, outputLayer, batchSize)
                 else:
                     finalCost = avgCost(
-                        hiddenLayer1, hiddenLayer2, outputLayer)
+                        hiddenLayer1, hiddenLayer2, outputLayer, batchSize)
 
                 if printOut:
                     print(f"Correct Answer: {correctAnswer}")
@@ -686,10 +738,10 @@ def backpropogate(epochs, learnRate, inputNeurons, hiddenLayer1, hiddenLayer2, o
 
                 if i == 0:
                     initialCost = avgCost(
-                        hiddenLayer1, hiddenLayer2, outputLayer)
+                        hiddenLayer1, hiddenLayer2, outputLayer, batchSize)
                 else:
                     finalCost = avgCost(
-                        hiddenLayer1, hiddenLayer2, outputLayer)
+                        hiddenLayer1, hiddenLayer2, outputLayer, batchSize)
 
                 if printOut:
                     print(f"Correct Answer: {correctAnswer}")
@@ -741,10 +793,10 @@ def backpropogate(epochs, learnRate, inputNeurons, hiddenLayer1, hiddenLayer2, o
 
                 if i == 0:
                     initialCost = avgCost(
-                        hiddenLayer1, hiddenLayer2, outputLayer)
+                        hiddenLayer1, hiddenLayer2, outputLayer, batchSize)
                 else:
                     finalCost = avgCost(
-                        hiddenLayer1, hiddenLayer2, outputLayer)
+                        hiddenLayer1, hiddenLayer2, outputLayer, batchSize)
 
                 if printOut:
                     print(f"Correct Answer: {correctAnswer}")
@@ -762,12 +814,38 @@ def backpropogate(epochs, learnRate, inputNeurons, hiddenLayer1, hiddenLayer2, o
                 outputLayer.changeNeuronBiasAndActivation(
                     neuronCount, changeBias)
             neuronCount += 1
-        afterCost = avgCost(hiddenLayer1, hiddenLayer2, outputLayer)
+        afterCost = avgCost(hiddenLayer1, hiddenLayer2, outputLayer, batchSize)
         # only plot baselineCost if you want to see the change in cost
         # plotYAxis.append(baselineCost)
         plotYAxis.append(afterCost)
-        accuracy = f"{(1-afterCost)*100}%"
-        printProgressBar(epochCount, epochs, printEnd=accuracy)
+        epochT2 = t.time()
+        epochTE = epochT2 - epochT1
+        epochET = epochTE * (epochs - (epochCount + 1))
+        accuracy = f"\nAccuracy:{(1-afterCost)*100}%  \nEstimated Time: {time_convert(epochET, True)}"
+        os.system("cls")
+        printProgressBar(epochCount + 1, epochs, printEnd=accuracy)
+        # write weights and biases to list(store progress)
+        w = open("FromScratch\weights.txt", "r+")
+        w.truncate(0)
+        weightsHL1 = hiddenLayer1.getAllWeights()
+        weightsHL2 = hiddenLayer2.getAllWeights()
+        weightsOL = outputLayer.getAllWeights()
+        b = open("FromScratch\\biases.txt", "r+")
+        b.truncate(0)
+        biasesHL1 = hiddenLayer1.getAllBiases()
+        biasesHL2 = hiddenLayer2.getAllBiases()
+        biasesOL = outputLayer.getAllBiases()
+        w = "FromScratch\weights.txt"
+        b = "FromScratch\\biases.txt"
+
+        def write_list(name, list):
+            # store list in binary file so 'wb' mode
+            with open(name, 'wb') as fp:
+                pickle.dump(list, fp)
+        temp = [weightsHL1, weightsHL2, weightsOL]
+        write_list(w, temp)
+        temp = [biasesHL1, biasesHL2, biasesOL]
+        write_list(b, temp)
 
     print(f"Correct Answer: {correctAnswer}")
     print(f"{outputLayer.printPrediction()}")
@@ -775,70 +853,30 @@ def backpropogate(epochs, learnRate, inputNeurons, hiddenLayer1, hiddenLayer2, o
 
     ##
     printProgressBar(1, 1)
-    w = open("weights.txt", "r+")
-    w.truncate(0)
 
+    w = open("FromScratch\weights.txt", "r+")
+    w.truncate(0)
     weightsHL1 = hiddenLayer1.getAllWeights()
     weightsHL2 = hiddenLayer2.getAllWeights()
     weightsOL = outputLayer.getAllWeights()
-
-    w.write(str(weightsHL1))
-    w.write("\n")
-    w.write(str(weightsHL2))
-    w.write("\n")
-    w.write(str(weightsOL))
-    w.close()
-
-    ##
-    b = open("biases.txt", "r+")
+    b = open("FromScratch\\biases.txt", "r+")
     b.truncate(0)
-
     biasesHL1 = hiddenLayer1.getAllBiases()
     biasesHL2 = hiddenLayer2.getAllBiases()
     biasesOL = outputLayer.getAllBiases()
+    w = "FromScratch\weights.txt"
+    b = "FromScratch\\biases.txt"
 
-    b.write(str(biasesHL1))
-    b.write("\n")
-    b.write(str(biasesHL2))
-    b.write("\n")
-    b.write(str(biasesOL))
-    b.close()
-
+    def write_list(name, list):
+        # store list in binary file so 'wb' mode
+        with open(name, 'wb') as fp:
+            pickle.dump(list, fp)
+            # print('Done writing list into a binary file')
+    temp = [weightsHL1, weightsHL2, weightsOL]
+    write_list(w, temp)
+    temp = [biasesHL1, biasesHL2, biasesOL]
+    write_list(b, temp)
     os.system("cls")
-    print("Train Data below")
-    for i in range(0, len(trainData)):
-        pick = i
-        inputNeurons = trainData[pick]
-        correctAnswer = answers[pick]
-        hiddenLayer1.feedForwardAgain(
-            numberOfNeuronsHL1, inputNeurons, hiddenLayer1.getAllWeights(), hiddenLayer1.getAllBiases())
-
-        hiddenLayer1Activations = hiddenLayer1.getAllActivations()
-        hiddenLayer2.feedForwardAgain(numberOfNeuronsHL2, hiddenLayer1Activations,
-                                      hiddenLayer2.getAllWeights(), hiddenLayer2.getAllBiases())
-
-        hiddenLayer2Activations = hiddenLayer2.getAllActivations()
-        outputLayer.feedForwardAgain(numberOfNeuronsOL, hiddenLayer2Activations,
-                                     outputLayer.getAllWeights(), outputLayer.getAllBiases())
-
-        print(f"{outputLayer.printPrediction()}, correct: {correctAnswer}")
-    print("Test Data below")
-    for i in range(0, len(testData)):
-        pick = i
-        inputNeurons = testData[pick]
-        correctAnswer = testAnswers[pick]
-        hiddenLayer1.feedForwardAgain(
-            numberOfNeuronsHL1, inputNeurons, hiddenLayer1.getAllWeights(), hiddenLayer1.getAllBiases())
-
-        hiddenLayer1Activations = hiddenLayer1.getAllActivations()
-        hiddenLayer2.feedForwardAgain(numberOfNeuronsHL2, hiddenLayer1Activations,
-                                      hiddenLayer2.getAllWeights(), hiddenLayer2.getAllBiases())
-
-        hiddenLayer2Activations = hiddenLayer2.getAllActivations()
-        outputLayer.feedForwardAgain(numberOfNeuronsOL, hiddenLayer2Activations,
-                                     outputLayer.getAllWeights(), outputLayer.getAllBiases())
-
-        print(f"{outputLayer.printPrediction()}, correct: {correctAnswer}")
     print(accuracy)
 
 
@@ -846,14 +884,14 @@ def backpropogate(epochs, learnRate, inputNeurons, hiddenLayer1, hiddenLayer2, o
 
 
 # fit (train)                 $ &
-def fit(epochs, learnRate, printOut, reUse):
+def fit(batchSize, epochs, learnRate, printOut, save):
     '''
-        usage - fit(epochs, learnRate, printOut, reUse)
+        usage - fit(epochs, learnRate, printOut, save)
         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         epochs - epochs are how many times you train on a specific sample
         learRate - learn rate should be between 0.01 and 1
         printOut - printOut specifies if it should print out its training results as it goes(make it True to display and False to not display)
-        reUse - reUse specifies whether to import the old weights and biases
+        save - save specifies whether to save the weights and biases
     '''
     global plotYAxis
     global correctAnswer
@@ -862,42 +900,35 @@ def fit(epochs, learnRate, printOut, reUse):
     # training data
     global trainData
     global testData
-    global trainingDataSelection
     global numberOfNeuronsHL1
     global numberOfNeuronsHL2
+    global numberOfNeuronsOL
     global inputNeurons
     global hiddenLayer1
     global hiddenLayer2
     global outputLayer
     global answers
-    answers = separateAnswers(trainData)
+    global trainAnswers
+    answers = trainAnswers
     plotYAxis = []
-    trainData = []
-    trainData = savedTrainData
-    separateAnswers(trainData)
     outputCount = set(answers)
     numberOfNeuronsOL = len(outputCount)
     trainingData = trainData
     trainingData = sigmoidInput(trainingData)
     trainingDataSelection = r.randrange(0, len(trainData))
-    testingDataSelection = r.randrange(0, len(testData))
+    # testingDataSelection = r.randrange(0, len(testData))
     setupInputNeurons(trainingData[trainingDataSelection])
     # initialize model
-    w = open("weights.txt", "r+")
-    read = w.readlines()
-    gottenWeights = []
-    for i in range(len(read)):
-        gottenWeights.append(re.findall("-?\d+.\d+", str(read[i])))
-    w.close()
+    if save:
+        def read_list(list):
+            # for reading also binary mode is important
+            with open(list, 'rb') as fp:
+                n_list = pickle.load(fp)
+                return n_list
 
-    b = open("biases.txt", "r+")
-    read = b.readlines()
-    gottenBiases = []
-    for i in range(len(read)):
-        gottenBiases.append(re.findall("-?\d+.\d+", str(read[i])))
-    b.close()
+        gottenWeights = read_list("FromScratch\weights.txt")
+        gottenBiases = read_list("FromScratch\\biases.txt")
 
-    if reUse:
         hiddenLayer1 = layer(numberOfNeuronsHL1, inputNeurons,
                              gottenWeights[0], gottenBiases[0])
 
@@ -909,7 +940,7 @@ def fit(epochs, learnRate, printOut, reUse):
         # get the previous layer's activations to feed forward
         hiddenLayer2Activations = hiddenLayer2.getAllActivations()
         outputLayer = layer(
-            numberOfNeuronsOL, hiddenLayer2Activations, gottenWeights[2], gottenBiases[2])
+            numberOfNeuronsOL, hiddenLayer2Activations, gottenWeights[2], gottenBiases[2], oL=1)
 
         correctAnswer = str(answers[trainingDataSelection])
     else:
@@ -921,45 +952,100 @@ def fit(epochs, learnRate, printOut, reUse):
 
         # get the previous layer's activations to feed forward
         hiddenLayer2Activations = hiddenLayer2.getAllActivations()
-        outputLayer = layer(numberOfNeuronsOL, hiddenLayer2Activations)
+        outputLayer = layer(numberOfNeuronsOL, hiddenLayer2Activations, oL=1)
 
         correctAnswer = str(answers[trainingDataSelection])
 
     ########################################################################
 
-    backpropogate(epochs, learnRate, inputNeurons, hiddenLayer1, hiddenLayer2, outputLayer,
+    backpropogate(batchSize, epochs, learnRate, inputNeurons, hiddenLayer1, hiddenLayer2, outputLayer,
                   printOut, numberOfNeuronsHL1, numberOfNeuronsHL2, numberOfNeuronsOL)
 
- # fit(epochs, learnRate, printOut, reUse)
- # epochs are how many times you train on a certain sample
- # learn rate should be between 0.01 and 1
- # printOut specifies if it should print out its training results as it goes(make it True to display and False to not display)
- # reUse specifies whether to import the old weights and biases
+
+def addData(data):
+    if len(data) > 0:
+        with open("data.csv", "a+", newline='') as f:
+            csvWriter = csv.writer(f, dialect="excel")
+            csvWriter.writerow(data)
+        print("Restart the project then set Train to 1, and epochs to 2")
+
+
+
+# implement                    $ &
+Train = 1
+build = True
+visual = False
 numberOfNeuronsHL1 = 5
 numberOfNeuronsHL2 = 10
-startTime = t.time()
-# implement                    $ &
-fit(10, 0.1, False, False)
-endTime = t.time()
-elapsedTime = endTime - startTime
+numberOfNeuronsOL = 10
+# stuff for training
+epochs = 10
+learnRate = 0.1
 
+# stuff for testing
+# pick = r.randrange(0, len(testData))
+# predictData = testData[pick]
+# print(f"This is right: {testAnswers[pick]}")
+# Use me to put in any data the network gets wrong -- put the data inside the ([right here])
+addData([])
+# ^ make sure the answer is in the data btw ^
+if Train == 1:
+    # fit(epochs, learnRate, printOut, save)
+    # epochs are how many times you train on a certain sample
+    # learn rate should be between 0.01 and 1
+    # printOut specifies if it should print out its training results as it goes(make it True to display and False to not display)
+    # save specifies whether to import the old weights and biases
 
-def time_convert(sec):
-    mins = sec // 60
-    sec = sec % 60
-    hours = mins // 60
-    mins = mins % 60
-    print("Time Lapsed = {0}:{1}:{2}".format(int(hours), int(mins), sec))
+    startTime = t.time()
 
+    fit(len(trainData), epochs, learnRate, False, build)
+    endTime = t.time()
+    elapsedTime = endTime - startTime
 
-time_convert(elapsedTime)
+    time_convert(elapsedTime)
 
-# plots things
-plt.xlabel("Epoch")
-plt.ylabel("Cost")
-plt.fill_between([x for x in range(0, len(plotYAxis))], plotYAxis)
-plt.plot(plotYAxis)
-plt.show()
+    # plots things
+    plt.xlabel("Epoch")
+    plt.ylabel("Cost")
+    plt.fill_between([x for x in range(0, len(plotYAxis))], plotYAxis)
+    plt.plot(plotYAxis)
+    plt.show()
+
+else:
+    def makePrediction(data, numberOfNeuronsHL1, numberOfNeuronsHL2, numberOfNeuronsOL):
+        def read_list(list):
+            # for reading also binary mode is important
+            with open(list, 'rb') as fp:
+                n_list = pickle.load(fp)
+                return n_list
+
+        gottenWeights = read_list("FromScratch\weights.txt")
+        gottenBiases = read_list("FromScratch\\biases.txt")
+
+        inputNeurons = data
+        hiddenLayer1 = layer(numberOfNeuronsHL1, inputNeurons,
+                             gottenWeights[0], gottenBiases[0])
+
+        # get the previous layer's activations to feed forward
+        hiddenLayer1Activations = hiddenLayer1.getAllActivations()
+        hiddenLayer2 = layer(
+            numberOfNeuronsHL2, hiddenLayer1Activations, gottenWeights[1], gottenBiases[1])
+
+        # get the previous layer's activations to feed forward
+        hiddenLayer2Activations = hiddenLayer2.getAllActivations()
+        outputLayer = layer(
+            numberOfNeuronsOL, hiddenLayer2Activations, gottenWeights[2], gottenBiases[2], 1)
+        print(outputLayer.printPrediction())
+
+    for i in range(0, 20):
+        pick = r.randrange(0, len(testData))
+        predictData = testData[pick]
+        print(f"This is right: {testAnswers[pick]}")
+        makePrediction(predictData, numberOfNeuronsHL1,
+                       numberOfNeuronsHL2, numberOfNeuronsOL)
+if visual:
+    import visuals
+    visuals.main()
 
 ###########################################
 

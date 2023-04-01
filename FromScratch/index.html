@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>digi-recog</title>
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="https://pyscript.net/alpha/pyscript.js"></script>
+    <py-env>
+        - numpy
+    </py-env>
+</head>
+<body>
+    <h1 id="opening">digi-recog v1.0</h1>
+    <div id="grid-surround"> </div>
+    <div id ="grid-container">
+          <div class="grid-item" id="p0"></div>
+          <div class="grid-item" id="p1"></div>
+          <div class="grid-item" id="p2"></div>
+          <div class="grid-item" id="p3"></div>
+          <div class="grid-item" id="p4"></div>
+          <div class="grid-item" id="p5"></div>
+          <div class="grid-item" id="p6"></div>
+          <div class="grid-item" id="p7"></div>
+          <div class="grid-item" id="p8"></div>
+          <div class="grid-item" id="p9"></div>
+          <div class="grid-item" id="p10"></div>
+          <div class="grid-item" id="p11"></div>
+          <div class="grid-item" id="p12"></div>
+          <div class="grid-item" id="p13"></div>
+          <div class="grid-item" id="p14"></div>
+          <div class="grid-item" id="p15"></div>
+          <div class="grid-item" id="p16"></div>
+          <div class="grid-item" id="p17"></div>
+          <div class="grid-item" id="p18"></div>
+          <div class="grid-item" id="p19"></div>
+          <div class="grid-item" id="p20"></div>
+          <div class="grid-item" id="p21"></div>
+          <div class="grid-item" id="p22"></div>
+          <div class="grid-item" id="p23"></div>
+          <div class="grid-item" id="p24"></div>
+          <div class="grid-item" id="p25"></div>
+          <div class="grid-item" id="p26"></div>
+          <div class="grid-item" id="p27"></div>
+          <div class="grid-item" id="p28"></div>
+          <div class="grid-item" id="p29"></div>
+          <div class="grid-item" id="p30"></div>
+          <div class="grid-item" id="p31"></div>
+          <div class="grid-item" id="p32"></div>
+          <div class="grid-item" id="p33"></div>
+          <div class="grid-item" id="p34"></div>
+          <div class="grid-item" id="p35"></div>
+          <div class="grid-item" id="p36"></div>
+          <div class="grid-item" id="p37"></div>
+          <div class="grid-item" id="p38"></div>
+          <div class="grid-item" id="p39"></div>
+          <div class="grid-item" id="p40"></div>
+          <div class="grid-item" id="p41"></div>
+          <div class="grid-item" id="p42"></div>
+          <div class="grid-item" id="p43"></div>
+          <div class="grid-item" id="p44"></div>
+          <div class="grid-item" id="p45"></div>
+          <div class="grid-item" id="p46"></div>
+          <div class="grid-item" id="p47"></div>
+          <div class="grid-item" id="p48"></div>
+          <div class="grid-item" id="p49"></div>
+          <div class="grid-item" id="p50"></div>
+          <div class="grid-item" id="p51"></div>
+          <div class="grid-item" id="p52"></div>
+          <div class="grid-item" id="p53"></div>
+          <div class="grid-item" id="p54"></div>
+          <div class="grid-item" id="p55"></div>
+          <div class="grid-item" id="p56"></div>
+          <div class="grid-item" id="p57"></div>
+          <div class="grid-item" id="p58"></div>
+          <div class="grid-item" id="p59"></div>
+          <div class="grid-item" id="p60"></div>
+          <div class="grid-item" id="p61"></div>
+          <div class="grid-item" id="p62"></div>
+          <div class="grid-item" id="p63"></div>
+    <button id="clear" ondblclick="clearGrid()">Clear Grid</button>
+    <button id="copy" ondblclick="copyToClipboard()">Copy Data</button>
+    <input id="load" placeholder="Load"></input>
+    <button id="predict" type="button" pys-onClick="runPython">predict</button>
+    <script src="dataHandle.js"></script>
+    <link rel="stylesheet" href="https://pyscript.net/alpha/pyscript.css" />
+
+    <py-script>
+        from js import getValues, document
+        import numpy as np
+        import random as r
+        import pickle     
+        from pyodide import JsProxy
+
+         # imports      $ &
+        weights = [[[-12.709679070736366, -6.191057977248039, -1.993348485911038, 1.1043611027045768, -1.9023577395964726, -1.359257859684862, -1.5766356753554596, 2.628574601164885, -2.49513089352572, 0.4637317543044438, 0.8246386711971789, -0.8428693660339228, -0.19509441358091553, 2.3216046300754956, 2.6621122590843966, -0.9412987355903288, -10.965217069038088, -0.8526155006495191, 1.5235463124827429, 1.056189269654178, 2.2576522811870348, 3.284464967800242, 0.25336542873009726, -1.4288878943275418, -13.434271987851416, -0.9611584415023254, 0.1713010719839206, 0.07334253162290111, 0.7543129878932628, -0.9291467345862147, 4.472708208925346, -13.206787853982885, -13.10212698700975, -2.0431674680089342, -1.4048447675298426, 1.3111266418455014, -3.0714579974739036, -3.870037417733199, 1.1787599388242698, -13.863195495186037, -2.7077456992226185, -3.4402461277349214, 2.211455297206381, -0.9651445168880846, -0.051786629284356234, -1.4816148816813581, -0.31994943884149163, -9.790373697738417, -11.986175611409152, -4.4010736093645475, -0.5125536248259543, -3.6743204297651895, -1.0995495126561572, 0.014093083168868287, -1.4130188329027367, 5.601879478895154, -12.454170946781367, -8.487807573140751, -2.0151444391500246, 1.1367318083227187, 1.0538973701296932, -3.430227093735196, -1.1354715126480899, -3.7547852021260444], [-12.60073602558421, -4.922598356038539, 1.4307680123884374, 0.24801167216806694, 0.060573585766842464, -2.3704894706664215, -0.6645131775519977, 1.8822587881593134, -7.403930538114655, -0.5399393735115716, 2.1377507089937056, -1.0214991100429232, 1.9179075684617293, 0.19617093505043234, 2.8882162666865008, -3.434540532739992, -3.215588626745224, -0.9817161103687235, -2.590888520679178, -1.0086591599884023, 0.1706218411560427, 7.552698420543097, -0.5033840649215118, -3.9693169745427386, -12.834252313461839, -0.10310538001803965, -0.3447142561345016, -0.1751269385684819, -2.618026679335585, 0.024913544259584502, -1.157300880121041, -12.992051727365432, -12.599609706647547, -2.2157193883146715, 0.8098883920392654, -2.1606946892462364, -2.305340389803468, 5.163821546591869, 1.3546934365573113, -13.931221871919275, -7.388307394262963, 0.3708240762378643, -2.7826847116890887, -3.180935792285257, -2.3881396050792456, 2.6286881368340893, 0.4619932816886564, -13.31149339073734, -11.82654757104025, 0.8965016865474056, -1.0821635839004757, 2.3531852899198733, 0.9875806164446957, -0.8849974402637322, -0.004666009332642912, -0.7679077544141293, -12.788844885094047, -7.186120837958539, -1.235410877097121, 0.48740261211978086, -0.10375446913012204, 1.873598810784434, -0.2557245003754728, -10.592922251269737], [-13.303673252309279, -3.801163417010397, 1.398132672366649, -2.2978675597163933, -0.4720597109070186, -2.706867095400891, -8.035644005418812, -1.256292602743244, -4.918111375668751, -1.4463319387242344, -0.9767906061434178, 2.345717226566279, -0.27026671137346925, 1.2340312062885226, -2.0102716650977763, -2.0758093222853558, -5.353211973435279, -1.1335754468102412, 2.5996425449336122, 3.170142348310631, 0.8905767143254602, 0.8805695119116561, 0.9226441634409756, -2.5878619612284632, -12.76854174843242, -0.7342034665800903, 1.045417452040213, -3.1078954097171008, -3.5785958087336174, -0.6321170491446033, 3.1382922336796533, -13.268297311538724, -13.601082715080747, 1.6076188104504738, 0.710810122452427, 0.08227686878282175, -0.9345870930197293, -1.0137251324102976, -0.6708393988166212, -14.095218380431682, -3.219236753399201, -1.2977390471518764, 3.7619637145696876, 5.6447475376210114, 1.1160178195743353, -2.0525460855206115, -0.34306645611833186, 3.4700451194606075, -3.923996951392541, 0.48787908338320374, 2.2071772047698697, 0.28674949835538843, 1.4097512200445126, 1.2545685083327545, -1.525993305815895, -0.5755692949035558, -14.330985108324084, -7.824028857942288, -4.169895200301324, 0.12208498567432913, 4.688893823309464, 2.120806674991762, 1.6426238911861455, 1.0287102816141656], [-14.013787378129626, -5.484047311445436, 1.264003977981784, -1.4413168345811722, -4.0549099782626605, 2.134860337516137, 0.5230170352437022, -1.2687449334749705, 2.1891930124169194, 0.41869202625618107, 2.202558472357175, -2.523100452557619, -0.6859649964748262, -0.32521906154979274, 1.4944741622785582, 1.4559137757753953, -2.558698818401308, 0.5899815533961423, 2.5961091697656715, 0.6360157705450473, 0.2574835351526693, -1.4497067683970681, 0.331824625164856, -10.160020381196329, -13.558068977634354, 1.900152578300581, -1.1617582075357296, 2.4403822958553896, 2.852218404470381, -4.808281463358584, -4.834655216207993, -14.340989530540885, -13.643177142728542, -2.5513535849663476, -2.3234039229189833, 2.155592475498743, -2.7264934961753498, -4.309921813265697, -0.7053973429706009, -13.140885488660745, -10.613696864287428, -6.8064695988857045, -4.473888781419082, -4.223732852155048, -0.9744212351609072, 2.5004025501068954, -1.925301498080751, -2.8678318742208795, -6.438935159521285, -4.612864858370562, 4.068625529921965, 1.6427277251888406, 3.1187338853680586, 3.7998327469673083, 10.215245453511375, -2.6853635562278546, -13.257272210111546, -4.446026221346419, -0.399803928914255, 2.880041382107378, 6.21389188637578, 5.408541091690031, 7.450248824402944, 10.806145819346467], [-13.940877925640423, -5.960487237119113, -1.5101191529504328, -0.7435987714902155, -0.33374699696222354, 0.42078913036228804, 1.7532454566991529, 3.417671564752709, -7.843825389843166, 0.5686216288223107, -3.3323848174233945, -0.311135432978525, -0.7466258131052925, -0.33211783170825515, -1.716327428994012, 4.327264824722934, -4.075437640739888, -1.9222966974244844, 1.7540106538295794, 1.8932142533170613, -0.5001266294468918, 0.7361605118805581, -1.003284574550531, 0.6668142811750397, -14.258104220371933, 4.877581944559729, 4.089315540870216, 2.666454683197799, -1.7917807066983666, 1.489852396162612, 6.862191117095464, -12.652445520238194, -13.343570476878577, 1.2198885743238879, 3.056358202882974, 0.5269348359309944, -0.37441899752808294, -0.6503520038943262, 2.226788857377888, -12.913937112244694, 2.2735349367170943, -0.6909841686148495, -0.5474207866667351, -1.5495934856012352, 0.23401193560646324, 1.003787997442653, -0.6709005742135956, -2.642166280994892, -11.262213396778614, -3.2136413569810447, -0.9204102642723849, 0.4042511880894909, -1.6355738320835598, -2.6486395179826965, 0.27877051430623556, -3.621526986479354, -13.3466461590333, -5.284867987244819, -0.1763815740282297, -0.4039397145498532, 0.39089181613683466, -0.7959576453307107, -1.811869407194842, 0.5726182826969474]], [[2.2700127045852576, 0.8027713015020397, -0.8009711735758323, 4.434784425120223, -3.051917884138356], [-2.004227467965419, -3.698000846993623, -3.0021703483331295, -2.94500014068523, 5.643157823383711], [-3.3969134463660953, -1.1848127456065756, -2.9779566532872432, 2.316591271621316, -7.2990100842254515], [6.5314587507326065, 8.255273862556272, -1.7168384517242592, -9.474700182441133, 6.72250517284575], [0.9189930642542544, -0.3890776961145549, 7.421206612729414, 3.7700508944372237, -3.0042847830736954], [2.237060123205144, 8.605703719947384, 4.052560094356792, -0.8295104578266155, 4.661177844213162], [3.9981921639484255, 6.306066570083685, -0.8931593617343792, 0.4759937625047167, -5.09270671935296], [6.823282573242618, 6.313137393265949, -2.6944935978127846, -2.6021407377404855, 4.750891964663314], [6.598828183803302, 8.437220479769971, -2.5338653719254483, 1.4142734522853904, -2.9405282332865275], [-1.2311380932759903, -1.7077166539736104, 5.506441272873731, -2.163680667013125, -1.415221427605774]], [[-5.243276975919766, -5.926243249362911, -6.663929553928567, 2.633747913343253, 5.221668521400261, -6.4957248381291075, 4.174194293897974, -4.076261383552086, 9.286969706661157, 4.786926796917539], [2.5647311596976072, 1.4414352383784714, -7.222906618778209, -2.1670809799020616, 1.781974136195716, -3.2938379798970097, 2.3461094419897903, 3.0078956545195035, -6.682627938376613, 0.5636230174334325], [-0.3760393980060672, -6.608880076779543, 6.507345703792912, -11.613646878341841, 3.6181257822738115, -7.573398285876054, 3.543143862195095, -5.165371302405003, -2.444420939960176, 6.3910216847758825], [-1.0304816149034417, -2.92362468085322, 9.561940801143377, -4.096568896812831, -7.374294675934974, -1.400463894513093, 2.25722945237006, 1.218426266391392, 3.56038758881436, -8.274430042748218], [-8.760202668506546, 2.6963947242295703, -11.642932513325112, 0.06851185567170165, 6.398961215727921, -6.130194399285341, -2.7099767356415536, 4.979798118083252, -1.7510325212995201, 2.1211349403332282], [-1.5073321273175817, -0.8901669215698591, -6.18223711367576, -11.203145739878778, -4.97327912267786, 3.634148754880792, -4.796347368635712, 2.198220446504943, -4.16135500441791, -6.317193966246437], [-4.524157607797665, -6.345245634743548, -8.524155957439019, -10.335408232044307, 6.918462136160296, -4.50810157302861, -7.8257290584150105, -7.281884063180013, -4.8938833768268735, 7.210613980113446], [-7.189384943029684, 1.873362136094834, -0.9988097323820243, 5.104349628985872, -12.130059231920418, 0.05586253069319469, 1.2676879562591998, -2.7686816416459625, -0.8139464112397976, -0.9420550131459847], [0.8782975951063372, 0.16507707001393104, -9.121226487925949, -7.125799645024485, 6.15823964334359, -3.814355353532073, 4.355901319824365, -2.0944286105641416, 2.8606722062443146, -5.464631668102175], [4.844033704221413, -2.6413217866853564, -4.847982378213079, 2.833773299819841, -1.5299332638234697, -1.7679434016106994, 1.4049714291938247, 0.8337258376243919, -0.15921405584532858, -9.76430607728328]]]
+        biases = [[3.0000000000000164, -5.000000000000021, -7.400000000000022, 3.4000000000000057, 6.399999999999991], [-0.39999999999999547, 3.000000000000009, 5.000000000000006, -4.39999999999998, -2.600000000000016, 2.2000000000000095, 3.6000000000000068, -1.0000000000000007, -2.799999999999978, 2.199999999999996], [-6.000000000000008, -4.600000000000006, -1.3999999999999906, -2.6000000000000085, -4.600000000000016, 6.0, 3.8000000000000185, 2.000000000000012, -0.6000000000000056, -3.0000000000000164]]
+
+        def setupInputNeurons(items):
+            global inputNeurons
+            if type(items) != list:
+                quit(code="Input layer is not a list")
+            # let each item be a value from 0 to 1
+            inputNeurons = []
+            for item in items:
+                inputNeurons.append(item)
+            inputNeurons[0] = inputNeurons[0] * 10
+
+        def sigmoid(val, outputLayer=0):
+            if outputLayer != 0:
+                # ReLu
+                if val > 0:
+                    return val
+                else:
+                    return val * 0.1
+            # sigmoid for getting rid of some errors
+            if val > 0:
+                return 1/(1 + np.exp(-val))
+            else:
+                return np.exp(val)/(1 + np.exp(val))
+            # regular sigmoid
+            return 1/(1 + np.exp(-val))
+
+        class neuron:
+            def __init__(self, id, activationsOfPreviousLayer, fedInWeights, fedInBias, oL=0):
+                self.activationsOfPreviousLayer = activationsOfPreviousLayer
+                self.fedInWeights = fedInWeights
+                self.id = id
+                self.innerWeights = fedInWeights
+                self.bias = fedInBias
+
+                self.weightedSum = 0
+                idx = 0
+                # calculate the weighted sum -> w1a1 + w2a2 + ... + wn an
+                for item in self.innerWeights:
+                    self.weightedSum += (item * self.activationsOfPreviousLayer[idx])
+                    idx += 1
+                # calculate the activation from 0 to 1 -> sigmoid(weightedSum + bias)
+                if oL:
+                    self.activation = sigmoid(self.weightedSum + self.bias, 1)
+                else:
+                    self.activation = sigmoid(self.weightedSum + self.bias)
+
+            def getActivation(self):
+                return self.activation
+
+            def getId(self):
+                return self.id
+
+            def getWeights(self):
+                return self.innerWeights
+
+            def getBias(self):
+                return self.bias
+
+            def changeWeightAndActivation(self, weightIndex, deltaWeight):
+                self.innerWeights[weightIndex] = self.innerWeights[weightIndex] + deltaWeight
+
+                self.weightedSum = 0
+                idx = 0
+                # calculate the weighted sum -> w1a1 + w2a2 + ... + wn an
+                for item in self.innerWeights:
+                    self.weightedSum += (item * self.activationsOfPreviousLayer[idx])
+                    idx += 1
+                # calculate the activation from 0 to 1 -> sigmoid(weightedSum + bias)
+                self.activation = sigmoid(self.weightedSum + self.bias)
+
+            def changeBiasAndActivation(self, deltaBias):
+                self.bias = self.bias + deltaBias
+
+                self.weightedSum = 0
+                idx = 0
+                # calculate the weighted sum -> w1a1 + w2a2 + ... + wn an
+                for item in self.innerWeights:
+                    self.weightedSum += (item * self.activationsOfPreviousLayer[idx])
+                    idx += 1
+                # calculate the activation from 0 to 1 -> sigmoid(weightedSum + bias)
+                self.activation = sigmoid(self.weightedSum + self.bias)
+
+
+        class layer:
+            def __init__(self, amountOfNeurons, activationsOfPreviousLayer, passInWeights=[], passInBiases=[], oL=0):
+                self.activationsOfPreviousLayer = activationsOfPreviousLayer
+                self.amountOfNeurons = amountOfNeurons
+                self.neurons = []
+                # make all the neurons -> all are empty as of now
+                for _ in range(self.amountOfNeurons):
+                    self.neurons.append(0)
+                # fill all the neurons up
+                for idx in range(len(self.neurons)):
+                    # set some random numbers for the weights of the neuron
+                    feedWeights = []
+                    for _ in self.activationsOfPreviousLayer:
+                        feedWeights.append(r.uniform(-1.0, 1.0))
+                    # set a random number for the bias
+                    feedBias = r.randrange(-5, 5)
+                    self.neurons[idx] = neuron(
+                        idx, self.activationsOfPreviousLayer, feedWeights, feedBias, oL)
+
+                if passInWeights != []:
+                    if passInBiases != []:
+                        for idx in range(len(self.neurons)):
+                            # feed in some weights that are given already
+                            feedWeights = passInWeights[idx]
+                            # set a random number for the bias
+                            feedBias = passInBiases[idx]
+                            self.neurons[idx] = neuron(
+                                idx, self.activationsOfPreviousLayer, feedWeights, feedBias)
+
+            def getAmountOfNeurons(self):
+                return self.amountOfNeurons
+
+            def getAllWeights(self):
+                # get the weights from all of the neurons
+                allWeights = [i.getWeights() for i in self.neurons]
+                return allWeights
+
+            def getAllBiases(self):
+                # get the weights from all of the neurons
+                allBiases = [i.getBias() for i in self.neurons]
+                return allBiases
+
+            def getAllActivations(self):
+                activations = []
+                for idx in self.neurons:
+                    activations.append(idx.getActivation())
+                return activations
+
+            def getAllActivationPercentages(self):
+                activations = []
+                for idx in self.neurons:
+                    percentage = idx.getActivation()*100
+                    activations.append(f"{percentage}%")
+                return activations
+
+            def getPrediction(self):
+                activations = []
+                for idx in self.neurons:
+                    percentage = idx.getActivation()*100
+                    activations.append(percentage)
+                returnList = []
+                # [0] is the answer it thinks is right
+                returnList.append(activations.index(max(activations))+1)
+                # [1] is the percentage value of its decision
+                returnList.append(max(activations))
+                return returnList
+
+            def printPrediction(self):
+                activations = []
+                for idx in self.neurons:
+                    percentage = idx.getActivation()*100
+                    activations.append(percentage)
+                # does same thing as function above, just formats it cool
+                return f"Prediction: With {max(activations)}% certainty it is {activations.index(max(activations))}"
+
+            def getCost(self, rightAnswer=False):
+                global correctAnswer
+                # only use for output layer
+                actualOutput = []
+                predictedOutput = []
+                predictedOutput = self.getAllActivations()
+
+                for i in range(1, len(predictedOutput)+1):
+                    if rightAnswer:
+                        if float(i-1) == float(correctAnswer):
+                            actualOutput.append(1.0)
+                        else:
+                            actualOutput.append(0.0)
+                    else:
+                        if float(i-1) == float(rightAnswer):
+                            actualOutput.append(1.0)
+                        else:
+                            actualOutput.append(0.0)
+                # print(predictedOutput, actualOutput, correctAnswer)
+
+                def meanSquaredError(p, y):
+                    # use this only (best cost for this usage)
+                    sum = 0
+                    for idx in range(len(p)):
+                        sum += np.square(y[idx] - p[idx])
+                    return sum
+
+                # multiplying by 0.5 (dividing by 2) so that when doing the
+                # derivative, it will cancel it out
+                return 0.5*meanSquaredError(predictedOutput, actualOutput)
+
+            def feedForwardAgain(self, amountOfNeurons, activationsOfPreviousLayer, weights, bias):
+                self.activationsOfPreviousLayer = activationsOfPreviousLayer
+                self.amountOfNeurons = amountOfNeurons
+                self.neurons = []
+                # make all the neurons -> all are empty as of now
+                for _ in range(self.amountOfNeurons):
+                    self.neurons.append(0)
+                # fill all the neurons up
+                for idx in range(len(self.neurons)):
+                    # set some random numbers for the weights of the neuron
+                    feedWeights = weights[idx]
+                    # print(weights)
+                    # print(feedWeights)
+                    # set a random number for the bias
+                    feedBias = bias[idx]
+                    self.neurons[idx] = neuron(
+                        idx, self.activationsOfPreviousLayer, feedWeights, feedBias)
+
+            def changeNeuronWeightAndActivation(self, neuronIndex, weightIndex_, deltaWeight_):
+                self.neurons[neuronIndex].changeWeightAndActivation(
+                    weightIndex_, deltaWeight_)
+
+            def changeNeuronBiasAndActivation(self, neuronIndex, deltaBias_):
+                self.neurons[neuronIndex].changeBiasAndActivation(deltaBias_)
+
+        def makePrediction(data, numberOfNeuronsHL1, numberOfNeuronsHL2, numberOfNeuronsOL):
+            def read_list(list):
+                # for reading also binary mode is important
+                with open(list, 'rb') as fp:
+                    n_list = pickle.load(fp)
+                    return n_list
+
+            # gottenWeights = read_list("FromScratch\weights.txt")
+            # gottenBiases = read_list("FromScratch\\biases.txt")
+            gottenWeights = weights
+            gottenBiases = biases
+
+
+            inputNeurons = data
+            hiddenLayer1 = layer(numberOfNeuronsHL1, inputNeurons,
+                                    gottenWeights[0], gottenBiases[0])
+
+            # get the previous layer's activations to feed forward
+            hiddenLayer1Activations = hiddenLayer1.getAllActivations()
+            hiddenLayer2 = layer(
+                numberOfNeuronsHL2, hiddenLayer1Activations, gottenWeights[1], gottenBiases[1])
+
+            # get the previous layer's activations to feed forward
+            hiddenLayer2Activations = hiddenLayer2.getAllActivations()
+            outputLayer = layer(
+                numberOfNeuronsOL, hiddenLayer2Activations, gottenWeights[2], gottenBiases[2], 1)
+            print(" `")
+            return outputLayer.getPrediction()[0]-1
+        
+        
+        def runPython(*args):
+            predictData = getValues()
+            numberOfNeuronsHL1 = 5
+            numberOfNeuronsHL2 = 10
+            numberOfNeuronsOL = 10
+            #print("`")
+            pyscript.write("predict", makePrediction(predictData, numberOfNeuronsHL1, numberOfNeuronsHL2, numberOfNeuronsOL))
+        
+    </py-script>
+</body>
+</html>
